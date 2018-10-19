@@ -1,0 +1,8 @@
+"randomdeathmatch"
+{
+	"base"		"base"
+	"title"		"Random Deathmatch"
+	"maps"		"^rdm_"
+	"menusystem"		"1"
+	"workshopid"		"745955236"
+}
