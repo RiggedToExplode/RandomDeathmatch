@@ -1,4 +1,4 @@
-print("utils.lua")
+print("rdm_utils.lua")
 math.randomseed(os.time())
 
 -- Check whether a table (tab) contains the value (val)

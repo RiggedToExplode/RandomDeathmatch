@@ -1,9 +1,10 @@
 print("[Random Deathmatch] Loading...")
 
-include("utils.lua")
-include("tables.lua")
-include("commands.lua")
-include("player.lua")
-include("post.lua")
+DeriveGamemode( "base" )
+
+AddCSLuaFile( "rdm_cl.lua" )
+AddCSLuaFile( "rdm_sh.lua" )
+
+include( "rdm_sv.lua" )
 
 print("[Random Deathmatch] Loaded!")

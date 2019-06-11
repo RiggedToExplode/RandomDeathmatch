@@ -1,3 +1,3 @@
-print("post.lua")
+print("rdm_post.lua")
 -- Nothing here for now.
 print(">Done!")
