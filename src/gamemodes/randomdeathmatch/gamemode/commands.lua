@@ -1,24 +1,34 @@
 print("commands.lua")
 
-concommand.Add("rdm_tableprint", function ()
+
+
+concommand.Add( "rdm_tableprint", function ()
+
   PrintTable(RDMTables)
-end)
 
-concommand.Add("rdm_tablereload", function()
-  local raw = file.Read("randomdeathmatch/tables.txt", "DATA")
+end )
 
-  if raw ~= nil then
-    RDMTables = util.JSONToTable( raw )
-    PrintTable(RDMTables)
-  else
-    print("RDM loadouts.txt config file does not exist or cannot be loaded!")
-  end
-end)
+concommand.Add( "rdm_tablereload", function()
 
-concommand.Add("rdm_tablesave", function()
-  local text = util.TableToJSON(RDMTables, true)
-  file.Write( "randomdeathmatch/tables.txt", text )
-end)
+  tableLoad()
+
+end )
+
+concommand.Add( "rdm_tablesave", function()
+
+  tableSave()
+
+end )
+
+concommand.Add( "rdm_tabledefault", function()
+
+  tableDefault()
+
+end )
+
+
+
+-- HERE FOLLOWS THE STILL MESSY COMMANDS FROM PREVIOUS VERSION
 
 -- All these are from the previous version. I didn't bother to comment them, but
 -- merely brought them up to date with everything I changed.
@@ -182,5 +192,7 @@ concommand.Add("rdm_nodrop_removeall", function(ply, cmd, args)
     end
   end
 end)
+
+
 
 print(">Done!")
