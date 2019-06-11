@@ -15,6 +15,10 @@ concommand.Add("rdm_tablereload", function()
   end
 end)
 
+concommand.Add("rdm_tablesave", function()
+  local text = util.TableToJSON(RDMTables, true)
+  file.Write( "randomdeathmatch/tables.txt", text )
+end)
 
 -- All these are from the previous version. I didn't bother to comment them, but
 -- merely brought them up to date with everything I changed.
