@@ -1,13 +1,45 @@
 print("tables.lua")
 
-raw = file.Read("randomdeathmatch/tables.txt", "DATA")
 
-if raw ~= nil then
-  -- If we could load from the file, then use it.
-  RDMTables = util.JSONToTable( raw )
-else
-  -- Else start the tables with some defaults.
-  -- Declare the item tables as one big RDMLoadout object.
+
+RDMTables = {} -- Initialize the tables object
+
+function tableLoad()
+
+  -- Load the text blob from tables.txt
+  local raw = file.Read( "randomdeathmatch/tables.txt", "DATA" )
+
+  -- the blob will equal nil if the file cannot be read.
+  if raw ~= nil then
+
+    RDMTables = util.JSONToTable( raw ) -- Change the tables if the blob can be loaded
+
+    return true -- Return true for success
+
+  else
+
+    print( "tableLoad: tables.txt does not exist or cannot be read!" ) -- Else throw an "error"
+    print( "-- Don't worry if this is your first time launching RDM, this is meant to happen!" ) -- Let the user know this is to be expected for first launch
+
+    return false -- Return false for failure
+
+  end
+
+end
+
+function tableSave()
+
+  -- Create the config directory (don't bother checking first)
+  file.CreateDir( "randomdeathmatch" )
+  -- Create the text blob and write it to the file.
+  local text = util.TableToJSON( RDMTables, true )
+  file.Write( "randomdeathmatch/tables.txt", text )
+
+end
+
+function tableDefault()
+
+  -- Create a default table.
   RDMTables = {
     noDrop = {
       "weapon_fists"
@@ -37,15 +69,21 @@ else
       "models/player/odessa.mdl"
     }
   }
+
 end
+
+
+
+if !tableLoad() then -- Try to load the tables from tables.txt
+  tableDefaults() -- Load some defaults if the tables can't be loaded.
+end
+
 
 -- Save the tables upon server shutdown
 function GM:ShutDown()
-  -- Create the config directory if it doesn't exist
-  file.CreateDir("randomdeathmatch")
-  -- Create the text blob and write it to the file.
-  local text = util.TableToJSON(RDMTables, true)
-  file.Write( "randomdeathmatch/tables.txt", text )
+
+  tableSave()
+
 end
 
 print(">Done!")
