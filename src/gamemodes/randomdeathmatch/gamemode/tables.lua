@@ -2,6 +2,7 @@ print("tables.lua")
 
 
 
+RDMTablesLength = {} -- Initialize a length object
 RDMTables = {} -- Initialize the tables object
 
 function tableLoad()
@@ -24,6 +25,13 @@ function tableLoad()
     return false -- Return false for failure
 
   end
+
+  RDMTablesLength = { -- Define the lengths once so that they are quicker to get.
+    primary = #RDMTables.primary,
+    melee = #RDMTables.melee,
+    auxiliary = #RDMTables.auxiliary,
+    models = #RDMTables.models
+  }
 
 end
 
@@ -68,6 +76,13 @@ function tableDefault()
     models = {
       "models/player/odessa.mdl"
     }
+  }
+
+  RDMTablesLength = { -- Define the lengths once so that they are quicker to get.
+    primary = #RDMTables.primary,
+    melee = #RDMTables.melee,
+    auxiliary = #RDMTables.auxiliary,
+    models = #RDMTables.models
   }
 
 end
