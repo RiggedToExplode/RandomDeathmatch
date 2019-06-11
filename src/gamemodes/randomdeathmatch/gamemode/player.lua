@@ -1,5 +1,38 @@
-print("player.lua")
+print( "player.lua" )
 
+
+
+-- Set player_default as the base class so all the other b.s. is dealt with
+DEFINE_BASECLASS( "player_default" )
+
+local PLAYER = {} -- Initialize our PLAYER object
+
+PLAYER.DisplayName                = "Combatant" -- Set properties for PLAYER object
+PLAYER.DropWeaponOnDie            = true
+
+function PLAYER:DropWeapons() -- Create our own DropWeapons method to be called on death
+  -- Nothing here yet.
+end
+
+function PLAYER:Loadout() -- Redefine loadout to give random weapons
+  self.Player:Give( "weapon_fists" ) -- Every player starts with fists
+  self.Player:Give( "weapon_crowbar" ) -- Give some other weapons for temporary testing purposes
+  self.Player:Give( "weapon_pistol" )
+	self.Player:GiveAmmo( 255, "Pistol", true )
+end
+
+-- Register the class with player manager
+player_manager.RegisterClass( "player_combatant", PLAYER, "player_default" )
+
+
+function playerJoin( ply ) -- Assign each new player the proper class
+  player_manager.SetPlayerClass( ply, "player_combatant" )
+end
+hook.Add( "PlayerInitialSpawn", "RDMPlayerJoin", playerJoin );
+
+
+
+--[[
 -- Function to drop player's items.
 -- This will be called when a player dies via the DoPlayerDeath hook.
 function dropItems(ply)
@@ -130,5 +163,8 @@ hook.Add( "DoPlayerDeath", "RDMDoPlayerDeath", doPlayerDeath )
 hook.Add( "PlayerDeath", "RDMPlayerDeath", playerDeath )
 hook.Add( "PlayerSpawn", "RDMPlayerSpawn", playerSpawn )
 hook.Add( "PlayerInitialSpawn", "RDMPlayerJoin", playerJoin )
+--]]
+
+
 
 print(">Done!")
