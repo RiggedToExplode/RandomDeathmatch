@@ -2,191 +2,102 @@ print( "rdm_player.lua" )
 
 
 
--- Set player_default as the base class so all the other b.s. is dealt with
-DEFINE_BASECLASS( "player_default" )
+function GM:PlayerLoadout( ply ) -- Redefine loadout to give random weapons
 
-local PLAYER = {} -- Initialize our PLAYER object
+  local begin = SysTime() -- Save time value for benchmark later
 
-PLAYER.DisplayName                = "Combatant" -- Set properties for PLAYER object
-PLAYER.DropWeaponOnDie            = true -- Kinda convenient that this already exists
+  ply:Give( "weapon_fists" ) -- Every player starts with fists
 
-function PLAYER.DropWeapons() -- Create our own DropWeapons method to be called on death
+  local wep = ply:Give( RDMTables.primary[ math.random( RDMTablesLength.primary ) ] ) -- Give the player their primary weapon and store the entity
 
-  -- Nothing here yet.
+  local clip = 0 -- Make sure the clip size is at least 1 (grenades & rpg will claim to have a clip size of -1)
+  if wep:GetMaxClip1() <= 0 then
+    clip = 1
+  else
+    clip = wep:GetMaxClip1()
+  end
+
+  ply:SetAmmo( math.random( 2, 4 ) * clip, wep:GetPrimaryAmmoType() ) -- Give the player some ammo for their primary weapon
+
+  local num = math.random( 8 ) -- Generate a number for chance calculations
+
+  if num <= 4 then -- 50% chance to get melee weapon
+
+    ply:Give( RDMTables.melee[ math.random( RDMTablesLength.melee ) ] )
+
+  end
+
+  if num <= 5 and num >= 4 then -- 25% chance to get aux weapon
+
+    ply:Give( RDMTables.auxiliary[ math.random( RDMTablesLength.auxiliary ) ] )
+
+  end
+
+  ply:SelectWeapon( "weapon_fists" ) -- Start every player with fists selected
+
+  print( "Loadout completed in " .. tostring(SysTime() - begin) .. " seconds." )
 
 end
 
-function PLAYER:Loadout() -- Redefine loadout to give random weapons
+function GM:GetFallDamage( ply, speed )
 
-  local begin = CurTime()
-
-  self.Player:Give( "weapon_fists" ) -- Every player starts with fists
-
-  self.Player:SelectWeapon( "weapon_fists" )
-
-  self.Player:Give( RDMTables.primary[ math.random( RDMTablesLength.primary ) ] )
-
-  local num = math.random( 8 )
-
-  if num <= 4 then
-    self.Player:Give( RDMTables.melee[ math.random( RDMTablesLength.melee ) ] )
-  end
-
-  if num <= 5 and num >= 4 then
-    self.Player:Give( RDMTables.auxiliary[ math.random( RDMTablesLength.auxiliary ) ] )
-  end
-
-  print( "Loadout completed in " .. tostring(CurTime() - begin) .. " seconds." )
+	return math.max( 0, math.ceil( 0.2418*speed - 141.75 ) )
 
 end
 
--- Register the class with player manager
-player_manager.RegisterClass( "player_combatant", PLAYER, "player_default" )
 
 
+function dropItems( ply, attacker, dmg )
+
+  local wep = ply:GetActiveWeapon() -- Save the active weapon
+
+  ply:SelectWeapon( "weapon_fists" ) -- Switch weapons in order to send holster signal to current weapon
+
+  if !has_value( RDMTables.nodrop, wep:GetClass() ) then
+
+    wep:SetVar( "dropped", 1 )
+    wep:SetVar( "droppedTime", 0 )
+    ply:DropWeapon( wep ) -- Drop the "current" weapon
+
+  end
+
+  for k, v in pairs( ply:GetWeapons() ) do
+
+    if !has_value( RDMTables.nodrop, v:GetClass() ) and math.random( 2 ) == 2 then
+
+      v:SetVar( "dropped", 1 )
+      v:SetVar( "droppedTime", 0 )
+      ply:DropWeapon( v )
+
+    end
+
+  end
+
+end
+hook.Add( "DoPlayerDeath", "RDMItemDrop", dropItems )
 
 function playerSpawn( ply ) -- Assign each new player the proper class
 
-  player_manager.SetPlayerClass( ply, "player_combatant" )
+  player_manager.SetPlayerClass( ply, "player_default" )
 
 end
-hook.Add( "PlayerSpawn", "RDMPlayerJoin", playerSpawn );
+hook.Add( "PlayerSpawn", "RDMPlayerJoin", playerSpawn )
 
+function giveAmmo( ply, wep )
 
+  local prev = ply:GetAmmoCount( wep:GetPrimaryAmmoType() )
 
---[[
--- Function to drop player's items.
--- This will be called when a player dies via the DoPlayerDeath hook.
-function dropItems(ply)
-
-  -- Drop the player's active weapon as long as it is not in the noDrop table.
-  if !has_value(RDMTables.noDrop, ply:GetActiveWeapon():GetClass()) then
-    local wep = ply:GetActiveWeapon();
-
-    -- Switch the player's active weapon to fists
-    -- This should send a sort of "unequip" signal to the weapon so that it can
-    -- stop playing music, etc. before being dropped.
-    ply:SelectWeapon("weapon_fists")
-
-    -- Do the drop.
-    ply:DropWeapon(wep)
-  end
-
-  -- Drop the other weapons in the player's inventory.
-  for i, wep in pairs(ply:GetWeapons()) do
-    -- Store the weapon class for checking against tables.
-    local class = wep:GetClass()
-
-    -- Drop about half of weapons that are not in the noDrop table.
-    if math.random(2) == 2 and !has_value(RDMTables.noDrop, class) then
-      ply:DropWeapon(wep);
-    else -- Otherwise simply strip them, for cleanliness upon respawn.
-      ply:StripWeapon(class)
-    end
-  end
-end
-
--- Function to give a player a random weapon from a table of weapon classes
--- This will be used in randomLoadout and the PlayerLoadout hook
--- Returns the weapon entity that was given.
-function giveFromTable(tab, ply)
-  local class = tab[math.random(#tab)]
-
-  ply:Give(class)
-
-  return ply:GetWeapon(class)
-end
-
--- Function to give a random loadout (from RDMTables) to a player.
--- This will be called when a player spawns via the PlayerLoadout hook.
-function randomLoadout(ply)
-  -- Every player will have at least their fists.
-  ply:Give("weapon_fists");
-
-  -- Get a random number up to 100 for calculating chances.
-  local rand = math.random(100)
-
-  -- 50% chance of a player getting a melee weapon from the melee table.
-  if rand <= 50 then
-    giveFromTable(RDMTables.melee, ply);
-  end
-
-  -- 25% chance of getting a weapon from the auxiliary table.
-  if rand <= 25 then
-    giveFromTable(RDMTables.auxiliary, ply)
-  end
-
-  -- Give the player their primary weapon.
-  local weapon = giveFromTable(RDMTables.primary, ply)
-  -- Generate a random amount of ammo to give the player based off of the clip size
-  -- of the primary weapon. Some weapons (such as grenades or rpg) are a pain in
-  -- the ass, and have a maximum clip size of -1. A quick and dirty if statement
-  -- can fix that.
-  local ammo = 0
-
-  if weapon:GetMaxClip1() == -1 then
-    ammo = math.random(2, 4)
+  local clip = 0 -- Make sure the clip size is at least 1 (grenades & rpg will claim to have a clip size of -1)
+  if wep:GetMaxClip1() <= 0 then
+    clip = 1
   else
-    ammo = weapon:GetMaxClip1() * math.random(2, 4)
+    clip = wep:GetMaxClip1()
   end
 
-  -- Set the player's ammo equal to the random amount generated.
-  ply:SetAmmo(ammo, weapon:GetPrimaryAmmoType())
+  ply:GiveAmmo( math.random( 1, 2 ) * clip, wep:GetPrimaryAmmoType(), true ) -- Give the player some ammo for their primary weapon
 
-  ply:SelectWeapon("weapon_fists")
 end
-
-
-
--- Function that we will add to the PlayerDeath hook
-function playerDeath(ply, attacker, inflictor)
-  -- Nothing in here yet.
-end
-
--- Function that we will add to the DoPlayerDeath hook.
--- This should cause the victim to drop their weapons, and maybe give the attacker some health or armor as a bonus.
-function doPlayerDeath(ply, attacker, dmg)
-  dropItems(ply)
-  -- Create the player's ragdoll.
-  ply:CreateRagdoll();
-end
-
--- Function that we will add to the PlayerSpawn hook.
-function playerSpawn(ply)
-  -- Nothing here yet.
-end
-
--- Function that we will ad to the PlayerInitialSpawn hook
--- Just sets the player's model, because something in here broke the default method to do so.
--- **TEMPORARY FIX**, hopefully.
-function playerJoin(ply)
-  ply:SetModel(RDMTables.models[math.random(#RDMTables.models)]);
-end
-
-
-
--- We are overwriting the base PlayerLoadout method because otherwise we have to
--- create our own player class just to get rid of the pistol that player's spawn
--- with.
-function GM:PlayerLoadout(ply)
-  randomLoadout(ply)
-end
-
--- Also just overwrite the fall damage method, because that maximum of 10 is just stupid.
--- This was stolen from the GMod wiki. It's meant to imitate CS:S fall damage.
-function GM:GetFallDamage( ply, speed )
-	return math.max( 0, math.ceil( 0.2418*speed - 141.75 ) )
-end
-
-
-
--- Add the hooks
-hook.Add( "DoPlayerDeath", "RDMDoPlayerDeath", doPlayerDeath )
-hook.Add( "PlayerDeath", "RDMPlayerDeath", playerDeath )
-hook.Add( "PlayerSpawn", "RDMPlayerSpawn", playerSpawn )
-hook.Add( "PlayerInitialSpawn", "RDMPlayerJoin", playerJoin )
---]]
-
+hook.Add( "PlayerCanPickupWeapon", "RDMGiveAmmo", giveAmmo )
 
 
 print(">Done!")

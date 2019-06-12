@@ -2,8 +2,7 @@ print("[Random Deathmatch] Loading...")
 
 DeriveGamemode( "base" )
 
-AddCSLuaFile( "rdm_cl.lua" )
-AddCSLuaFile( "rdm_sh.lua" )
+AddCSLuaFile( "init_cl.lua" )
 
 include( "rdm_sv.lua" )
 

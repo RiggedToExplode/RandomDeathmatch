@@ -6,7 +6,7 @@ RDMTablesLength = {} -- Initialize a length object
 RDMTables = {} -- Initialize the tables object
 
 function tableLengths()
-  
+
   RDMTablesLength = { -- Define the lengths once so that they are quicker to get.
     auxiliary = #RDMTables.auxiliary,
     melee = #RDMTables.melee,
@@ -14,6 +14,61 @@ function tableLengths()
     nodrop = #RDMTables.nodrop,
     primary = #RDMTables.primary
   }
+
+end
+
+function precache()
+
+  for k, v in pairs( RDMTables.primary ) do
+    local wep = weapons.Get( v )
+
+    if wep ~= nil then
+
+      local viewmodel = wep.ViewModel
+      local worldmodel = wep.WorldModel
+
+      print( "Precaching viewmodel " .. viewmodel )
+      util.PrecacheModel( viewmodel )
+      print( "Precaching worldmodel " .. worldmodel )
+      util.PrecacheModel( worldmodel )
+
+    end
+
+  end
+
+  for k, v in pairs( RDMTables.melee ) do
+    local wep = weapons.Get( v )
+
+    if wep ~= nil then
+
+      local viewmodel = wep.ViewModel
+      local worldmodel = wep.WorldModel
+
+      print( "Precaching viewmodel " .. viewmodel )
+      util.PrecacheModel( viewmodel )
+      print( "Precaching worldmodel " .. worldmodel )
+      util.PrecacheModel( worldmodel )
+
+    end
+
+  end
+
+  for k, v in pairs( RDMTables.auxiliary ) do
+    local wep = weapons.Get( v )
+
+    if wep ~= nil then
+
+      local viewmodel = wep.ViewModel
+      local worldmodel = wep.WorldModel
+
+      print( "Precaching viewmodel " .. viewmodel )
+      util.PrecacheModel( viewmodel )
+      print( "Precaching worldmodel " .. worldmodel )
+      util.PrecacheModel( worldmodel )
+
+    end
+
+  end
 
 end
 
@@ -27,6 +82,8 @@ function tableLoad()
 
     RDMTables = util.JSONToTable( raw ) -- Change the tables if the blob can be loaded
 
+    tableLengths()
+
     return true -- Return true for success
 
   else
@@ -37,8 +94,6 @@ function tableLoad()
     return false -- Return false for failure
 
   end
-
-  tableLengths()
 
 end
 
@@ -222,7 +277,7 @@ if !tableLoad() then -- Try to load the tables from tables.txt
   tableDefaults() -- Load some defaults if the tables can't be loaded.
 
 end
-
+precache()
 
 -- Save the tables upon server shutdown
 function GM:ShutDown()
