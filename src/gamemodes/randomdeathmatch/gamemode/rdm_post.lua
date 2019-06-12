@@ -6,7 +6,7 @@ timer.Create( "playerheal", 0.5, 0, function()
 
     if v:IsPlayer() then
 
-      if v:Health() < 100 then
+      if v:Health() < 100 and v:Alive() then
 
         v:SetHealth( v:Health() + 1 )
 

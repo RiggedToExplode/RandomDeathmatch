@@ -37,6 +37,9 @@ function GM:PlayerLoadout( ply ) -- Redefine loadout to give random weapons
 
   print( "Loadout completed in " .. tostring(SysTime() - begin) .. " seconds." )
 
+  ply:SetWalkSpeed( 250 )
+  ply:SetRunSpeed( 400 )
+
 end
 
 function GM:GetFallDamage( ply, speed )
