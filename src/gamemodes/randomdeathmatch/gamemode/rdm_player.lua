@@ -19,6 +19,20 @@ function GM:PlayerLoadout( ply ) -- Redefine loadout to give random weapons
 
   ply:SetAmmo( math.random( 2, 4 ) * clip, wep:GetPrimaryAmmoType() ) -- Give the player some ammo for their primary weapon
 
+  if math.random( 4 ) == 4 then
+
+    wep = ply:Give( RDMTables.primary[ math.random( RDMTablesLength.primary ) ] )
+
+    clip = 0
+    if wep:GetMaxClip1() <= 0 then
+      clip = 1
+    else
+      clip = wep:GetMaxClip1()
+    end
+
+    ply:SetAmmo( math.random(2, 4 ) * clip, wep:GetPrimaryAmmoType() )
+  end
+
   local num = math.random( 8 ) -- Generate a number for chance calculations
 
   if num <= 4 then -- 50% chance to get melee weapon
@@ -27,7 +41,7 @@ function GM:PlayerLoadout( ply ) -- Redefine loadout to give random weapons
 
   end
 
-  if num <= 5 and num >= 4 then -- 25% chance to get aux weapon
+  if num <= 6 and num >= 3 then -- 50% chance to get aux weapon
 
     ply:Give( RDMTables.auxiliary[ math.random( RDMTablesLength.auxiliary ) ] )
 
@@ -49,6 +63,13 @@ function GM:GetFallDamage( ply, speed )
 end
 
 
+
+function plyHurt( ply, attacker, health, dmg )
+  
+  ply:SetVar( "hurtTimer", 12 )
+  
+end
+hook.Add( "PlayerHurt", "RDMHurtTimer", plyHurt )
 
 function dropItems( ply, attacker, dmg )
 
@@ -82,6 +103,7 @@ hook.Add( "DoPlayerDeath", "RDMItemDrop", dropItems )
 function playerSpawn( ply ) -- Assign each new player the proper class
 
   player_manager.SetPlayerClass( ply, "player_default" )
+  ply:SetVar( "hurtTimer", 0 )
 
 end
 hook.Add( "PlayerSpawn", "RDMPlayerJoin", playerSpawn )
